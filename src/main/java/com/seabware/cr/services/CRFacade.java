@@ -3,7 +3,9 @@ package com.seabware.cr.services;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seabware.cr.Constants;
+import com.seabware.cr.daos.ClanDao;
 import com.seabware.cr.daos.WarlogDao;
+import com.seabware.cr.models.ClanDto;
 import com.seabware.cr.models.WarlogDto;
 import com.seabware.cr.models.WarlogReportDto;
 import com.seabware.cr.util.Tools;
@@ -50,8 +52,48 @@ public class CRFacade
 
 			for (WarlogDto warlogEntry : warlog)
 			{
-				warlogDao.upsertWar(forClan, warlogEntry);
+				warlogDao.upsertWar(warlogEntry);
 			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Refreshes/Updates the clan's roster.
+	 */
+	// -----------------------------------------------------------------------------------------------------------------
+	public static void bulkUpdateClan(String forClan)
+	{
+		ClanDto clanDto;
+
+		OkHttpClient httpclient = new OkHttpClient();
+
+		String url = Tools.getClanUrl(forClan);
+		System.out.println("Trying to connect to: " + url);
+
+		Request request = new Request.Builder()
+				.url(url)
+				.get()
+				.addHeader("auth", Constants.CR_API_KEY)
+				.build();
+
+		try (Response response = httpclient.newCall(request).execute())
+		{
+			if (response.code() != 200)
+				throw new Exception("API is offline: " + response.body().string());
+
+			ClanDao clanDao = new ClanDao(forClan);
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+			clanDto = mapper.readValue(response.body().bytes(), ClanDto.class);
+
+			// Updates the clan's roster.
+
+			clanDao.bulkUpdateClan(clanDto);
 		}
 		catch (Exception e)
 		{

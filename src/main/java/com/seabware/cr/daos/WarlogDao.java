@@ -24,7 +24,7 @@ public class WarlogDao extends AbstractBaseDao
 			"warlog inner join warlog_details on (warlog_details.warlogid = warlog.warlogid) " +
 			"WHERE " +
 			"warlog_details.clantag = ? AND " +
-			"warlog_details.name NOT IN (select name from blocked_players) " +
+			"warlog_details.name IN (select player from roster where clantag = ?) " +
 			"GROUP BY " +
 			"warlog_details.name " +
 			"ORDER BY " +
@@ -47,7 +47,7 @@ public class WarlogDao extends AbstractBaseDao
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public void upsertWar(String forClan, WarlogDto warlogEntry)
+	public void upsertWar(WarlogDto warlogEntry)
 	{
 		try
 		{
@@ -125,7 +125,8 @@ public class WarlogDao extends AbstractBaseDao
 			preparedStatement = getConnection().prepareStatement(sql);
 
 			preparedStatement.setString(1, this.clan); // clan.
-			preparedStatement.setLong(2, limit); // limit n clause.
+			preparedStatement.setString(2, this.clan); // clan.
+			preparedStatement.setLong(3, limit); // limit n clause.
 
 
 			resultSet = preparedStatement.executeQuery();

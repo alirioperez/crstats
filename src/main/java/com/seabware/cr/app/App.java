@@ -10,7 +10,10 @@ public class App
 		String forClan = Constants.THE_MONSTERS_CA_CLAN_TAG;
 
 		if (args[0].equals("collect"))
-			CRFacade.collectStats(forClan);
+		{
+			//CRFacade.collectStats(forClan);
+			CRFacade.bulkUpdateClan(forClan);
+		}
 		else
 			if (args[0].equals("reports"))
 			{
